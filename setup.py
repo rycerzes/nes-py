@@ -37,11 +37,11 @@ LIB_NES_ENV = Extension(LIB_NAME,
 
 setup(
     name='nes_py',
-    version='8.2.1',
-    description='An NES Emulator and OpenAI Gym interface',
+    version='8.3.0',
+    description='An NES Emulator and Farama Gymnasium interface',
     long_description=README,
     long_description_content_type='text/markdown',
-    keywords='NES Emulator OpenAI-Gym',
+    keywords='NES Emulator Farama-Gymnasium',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
