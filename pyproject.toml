@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "nes-py"
+version = "8.3.0"
+description = "NES Emulator and Farama Gymnasium interface"
+authors = ["swappy <59965507+rycerzes@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+gymnasium = ">=0.27.0"
+numpy = ">=1.18.5"
+pyglet = ">=1.4.0,<=1.5.27"
+tqdm = ">=4.48.2"
+twine = ">=1.11.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
