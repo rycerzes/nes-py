@@ -1,87 +1,36 @@
-"""A method to play gym environments using human IO inputs."""
-import gymnasium as gym
-import time
-from pyglet import clock
-from .._image_viewer import ImageViewer
+"""Methods for playing the game randomly, or as a human."""
+from tqdm import tqdm
 
 
-# the sentinel value for "No Operation"
-_NOP = 0
-
-
-def play_human(env: gym.Env, callback=None):
+def play_random(env, steps, seed=None):
     """
-    Play the environment using keyboard as a human.
+    Play the environment making uniformly random decisions.
 
     Args:
-        env: the initialized gym environment to play
-        callback: a callback to receive output from the environment
+        env (gym.Env): the initialized gym environment to play
+        steps (int): the number of random steps to take
 
     Returns:
         None
 
     """
-    # ensure the observation space is a box of pixels
-    assert isinstance(env.observation_space, gym.spaces.box.Box)
-    # ensure the observation space is either B&W pixels or RGB Pixels
-    obs_s = env.observation_space
-    is_bw = len(obs_s.shape) == 2
-    is_rgb = len(obs_s.shape) == 3 and obs_s.shape[2] in [1, 3]
-    assert is_bw or is_rgb
-    # get the mapping of keyboard keys to actions in the environment
-    if hasattr(env, 'get_keys_to_action'):
-        keys_to_action = env.get_keys_to_action()
-    elif hasattr(env.unwrapped, 'get_keys_to_action'):
-        keys_to_action = env.unwrapped.get_keys_to_action()
-    else:
-        raise ValueError('env has no get_keys_to_action method')
-    # create the image viewer
-    viewer = ImageViewer(
-        env.spec.id if env.spec is not None else env.__class__.__name__,
-        env.observation_space.shape[0], # height
-        env.observation_space.shape[1], # width
-        monitor_keyboard=True,
-        relevant_keys=set(sum(map(list, keys_to_action.keys()), []))
-    )
-    # create a done flag for the environment
-    done = True
-    # prepare frame rate limiting
-    target_frame_duration = 1 / env.metadata['video.frames_per_second']
-    last_frame_time = 0
-    # start the main game loop
     try:
-        while True:
-            current_frame_time = time.time()
-            # limit frame rate
-            if last_frame_time + target_frame_duration > current_frame_time:
-                continue
-            # save frame beginning time for next refresh
-            last_frame_time = current_frame_time
-            # clock tick
-            clock.tick()
-            # reset if the environment is done
+        done = False
+        _, _ = env.reset(seed=seed)
+        progress = tqdm(range(steps))
+        for _ in progress:
             if done:
-                done = False
-                state, _ = env.reset()
-                viewer.show(env.unwrapped.screen)
-            # unwrap the action based on pressed relevant keys
-            action = keys_to_action.get(viewer.pressed_keys, _NOP)
-            next_state, reward, terminated, truncated, _ = env.step(action)
+                _, _ = env.reset()
+            action = env.action_space.sample()
+            _, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
-            viewer.show(env.unwrapped.screen)
-            # pass the observation data through the callback
-            if callback is not None:
-                callback(state, action, reward, terminated, truncated, next_state)
-            state = next_state
-            # shutdown if the escape key is pressed
-            if viewer.is_escape_pressed:
-                break
+            progress.set_postfix(reward=reward, info=info)
+            env.render()
     except KeyboardInterrupt:
         pass
-
-    viewer.close()
+    # close the environment
     env.close()
 
 
-# explicitly define the outward facing API of the module
-__all__ = [play_human.__name__]
+# explicitly define the outward facing API of this module
+__all__ = [play_random.__name__]
